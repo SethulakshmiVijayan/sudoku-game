@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku - Classic Puzzle Game</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --color-bg: #faf9f7;
+            --color-surface: #ffffff;
+            --color-primary: #2c5f2d;
+            --color-primary-light: #97bc62;
+            --color-secondary: #d4a373;
+            --color-text: #1a1a1a;
+            --color-text-muted: #6b6b6b;
+            --color-border: #e0ddd9;
+            --color-border-thick: #2c5f2d;
+            --color-cell-locked: #f5f3f0;
+            --color-cell-editable: #ffffff;
+            --color-cell-selected: #fff9e6;
+            --color-cell-highlight: #f0f8f0;
+            --color-error: #c84b31;
+            --color-success: #2c5f2d;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+        }
+
+        [data-theme="dark"] {
+            --color-bg: #1a1a1a;
+            --color-surface: #2a2a2a;
+            --color-primary: #97bc62;
+            --color-primary-light: #b8d89f;
+            --color-secondary: #d4a373;
+            --color-text: #e8e8e8;
+            --color-text-muted: #a0a0a0;
+            --color-border: #404040;
+            --color-border-thick: #97bc62;
+            --color-cell-locked: #333333;
+            --color-cell-editable: #2a2a2a;
+            --color-cell-selected: #3d3d2a;
+            --color-cell-highlight: #2d3d2d;
+            --color-error: #ff6b6b;
+            --color-success: #97bc62;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: var(--color-bg);
+            color: var(--color-text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.6s ease;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            color: var(--color-primary);
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            color: var(--color-text-muted);
+            font-size: 0.95rem;
+            letter-spacing: 1px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+            animation: fadeInUp 0.6s ease 0.2s backwards;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: 2px solid var(--color-primary);
+            background: var(--color-surface);
+            color: var(--color-primary);
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn:hover {
+            background: var(--color-primary);
+            color: var(--color-surface);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            color: var(--color-surface);
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-light);
+            border-color: var(--color-primary-light);
+        }
+
+        .btn-secondary {
+            border-color: var(--color-secondary);
+            color: var(--color-secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--color-secondary);
+            color: var(--color-surface);
+        }
+
+        .btn-icon {
+            padding: 10px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        select {
+            padding: 12px 16px;
+            border: 2px solid var(--color-border);
+            background: var(--color-surface);
+            color: var(--color-text);
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.9rem;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s ease;
+        }
+
+        select:hover {
+            border-color: var(--color-primary);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: var(--color-surface);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            animation: fadeInUp 0.6s ease 0.3s backwards;
+        }
+
+        .timer {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--color-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .difficulty-badge {
+            padding: 6px 16px;
+            background: var(--color-primary-light);
+            color: var(--color-surface);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .game-board {
+            background: var(--color-surface);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: var(--shadow-lg);
+            margin-bottom: 24px;
+            animation: fadeInUp 0.6s ease 0.4s backwards;
+        }
+
+        .sudoku-grid {
+            display: grid;
+            grid-template-columns: repeat(9, 1fr);
+            gap: 0;
+            background: var(--color-border-thick);
+            border: 3px solid var(--color-border-thick);
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 0 auto;
+            max-width: 540px;
+            aspect-ratio: 1;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(1.2rem, 3vw, 1.8rem);
+            font-weight: 600;
+            background: var(--color-cell-editable);
+            border: 1px solid var(--color-border);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+
+        .cell.locked {
+            background: var(--color-cell-locked);
+            color: var(--color-text);
+            font-weight: 700;
+            cursor: default;
+        }
+
+        .cell.selected {
+            background: var(--color-cell-selected);
+            box-shadow: inset 0 0 0 2px var(--color-primary);
+        }
+
+        .cell.highlight {
+            background: var(--color-cell-highlight);
+        }
+
+        .cell.error {
+            background: rgba(200, 75, 49, 0.15);
+            color: var(--color-error);
+        }
+
+        .cell:not(.locked):hover {
+            background: var(--color-cell-selected);
+        }
+
+        /* 3x3 box borders */
+        .cell:nth-child(9n+3),
+        .cell:nth-child(9n+6) {
+            border-right: 3px solid var(--color-border-thick);
+        }
+
+        .cell:nth-child(n+19):nth-child(-n+27),
+        .cell:nth-child(n+46):nth-child(-n+54) {
+            border-bottom: 3px solid var(--color-border-thick);
+        }
+
+        .notes {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1px;
+            font-size: 0.5rem;
+            width: 100%;
+            height: 100%;
+            padding: 2px;
+        }
+
+        .notes span {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--color-text-muted);
+        }
+
+        .mode-controls {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 20px;
+            animation: fadeInUp 0.6s ease 0.5s backwards;
+        }
+
+        .mode-btn {
+            padding: 8px 20px;
+            border: 2px solid var(--color-border);
+            background: var(--color-surface);
+            color: var(--color-text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .mode-btn.active {
+            border-color: var(--color-primary);
+            background: var(--color-primary);
+            color: var(--color-surface);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.6s ease 0.6s backwards;
+        }
+
+        .success-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .success-overlay.active {
+            display: flex;
+        }
+
+        .success-card {
+            background: var(--color-surface);
+            padding: 48px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: var(--shadow-lg);
+            max-width: 400px;
+            animation: scaleIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .success-card h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--color-success);
+            margin-bottom: 16px;
+        }
+
+        .success-time {
+            font-size: 1.5rem;
+            color: var(--color-text);
+            margin-bottom: 24px;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--color-primary-light);
+            position: absolute;
+            animation: confetti-fall 3s linear forwards;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--color-surface);
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border-left: 4px solid var(--color-primary);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 999;
+        }
+
+        .toast.active {
+            transform: translateX(0);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--color-surface);
+            border: 2px solid var(--color-border);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            transition: all 0.2s ease;
+            z-index: 100;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            border-color: var(--color-primary);
+        }
+
+        @media (max-width: 640px) {
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .controls {
+                gap: 8px;
+            }
+
+            .btn {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+            }
+
+            .game-board {
+                padding: 12px;
+            }
+
+            .success-card {
+                padding: 32px 24px;
+                margin: 20px;
+            }
+
+            .theme-toggle {
+                top: 12px;
+                right: 12px;
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+    </button>
+
+    <div class="container">
+        <header>
+            <h1>Sudoku</h1>
+            <p class="subtitle">CLASSIC LOGIC PUZZLE</p>
+        </header>
+
+        <div class="controls">
+            <select id="difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium" selected>Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+            <button class="btn btn-primary" id="newGame">New Game</button>
+            <button class="btn" id="checkBtn">Check Solution</button>
+            <button class="btn btn-secondary" id="hintBtn">Hint</button>
+        </div>
+
+        <div class="game-info">
+            <div class="timer" id="timer">00:00</div>
+            <div class="difficulty-badge" id="difficultyBadge">MEDIUM</div>
+        </div>
+
+        <div class="mode-controls">
+            <button class="mode-btn active" data-mode="input">Number</button>
+            <button class="mode-btn" data-mode="notes">Notes</button>
+            <button class="btn-icon btn" id="undoBtn" title="Undo">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 7v6h6"></path>
+                    <path d="M21 17a9 9 0 00-9-9 9 9 0 00-6 2.3L3 13"></path>
+                </svg>
+            </button>
+            <button class="btn-icon btn" id="redoBtn" title="Redo">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 7v6h-6"></path>
+                    <path d="M3 17a9 9 0 019-9 9 9 0 016 2.3l3 2.7"></path>
+                </svg>
+            </button>
+        </div>
+
+        <div class="game-board">
+            <div class="sudoku-grid" id="grid"></div>
+        </div>
+
+        <div class="action-buttons">
+            <button class="btn" id="clearBtn">Clear All</button>
+            <button class="btn" id="resetBtn">Reset Puzzle</button>
+        </div>
+    </div>
+
+    <div class="success-overlay" id="successOverlay">
+        <div class="success-card">
+            <h2>Congratulations!</h2>
+            <p class="success-time">Time: <span id="finalTime">00:00</span></p>
+            <button class="btn btn-primary" id="playAgainBtn">Play Again</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ============================================================================
+        // SUDOKU GAME STATE
+        // ============================================================================
+        class SudokuGame {
+            constructor() {
+                this.grid = Array(9).fill(null).map(() => Array(9).fill(0));
+                this.solution = Array(9).fill(null).map(() => Array(9).fill(0));
+                this.locked = Array(9).fill(null).map(() => Array(9).fill(false));
+                this.notes = Array(9).fill(null).map(() => Array(9).fill(null).map(() => new Set()));
+                this.selectedCell = null;
+                this.mode = 'input'; // 'input' or 'notes'
+                this.difficulty = 'medium';
+                this.history = [];
+                this.historyIndex = -1;
+                this.startTime = null;
+                this.timerInterval = null;
+                this.elapsedSeconds = 0;
+            }
+
+            // Generate a complete valid Sudoku solution
+            generateSolution() {
+                this.solution = Array(9).fill(null).map(() => Array(9).fill(0));
+                this.fillGrid(this.solution);
+                return this.solution;
+            }
+
+            // Recursive backtracking to fill grid
+            fillGrid(grid) {
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (grid[row][col] === 0) {
+                            const numbers = this.shuffleArray([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+                            for (let num of numbers) {
+                                if (this.isValidPlacement(grid, row, col, num)) {
+                                    grid[row][col] = num;
+                                    if (this.fillGrid(grid)) {
+                                        return true;
+                                    }
+                                    grid[row][col] = 0;
+                                }
+                            }
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            // Check if number placement is valid
+            isValidPlacement(grid, row, col, num) {
+                // Check row
+                for (let c = 0; c < 9; c++) {
+                    if (grid[row][c] === num) return false;
+                }
+
+                // Check column
+                for (let r = 0; r < 9; r++) {
+                    if (grid[r][col] === num) return false;
+                }
+
+                // Check 3x3 box
+                const boxRow = Math.floor(row / 3) * 3;
+                const boxCol = Math.floor(col / 3) * 3;
+                for (let r = boxRow; r < boxRow + 3; r++) {
+                    for (let c = boxCol; c < boxCol + 3; c++) {
+                        if (grid[r][c] === num) return false;
+                    }
+                }
+
+                return true;
+            }
+
+            // Create puzzle by removing numbers from solution
+            createPuzzle(difficulty) {
+                this.generateSolution();
+                this.grid = this.solution.map(row => [...row]);
+                
+                const cellsToRemove = {
+                    'easy': 35,
+                    'medium': 45,
+                    'hard': 55
+                }[difficulty];
+
+                let removed = 0;
+                const attempts = [];
+                
+                // Create list of all cell positions
+                for (let i = 0; i < 81; i++) {
+                    attempts.push(i);
+                }
+                this.shuffleArray(attempts);
+
+                for (let i = 0; i < attempts.length && removed < cellsToRemove; i++) {
+                    const pos = attempts[i];
+                    const row = Math.floor(pos / 9);
+                    const col = pos % 9;
+                    
+                    const backup = this.grid[row][col];
+                    this.grid[row][col] = 0;
+                    
+                    // Check if puzzle still has unique solution (simplified check)
+                    if (this.countSolutions(this.grid.map(r => [...r])) === 1) {
+                        removed++;
+                    } else {
+                        this.grid[row][col] = backup;
+                    }
+                }
+
+                // Set locked cells
+                this.locked = this.grid.map(row => row.map(cell => cell !== 0));
+                this.notes = Array(9).fill(null).map(() => Array(9).fill(null).map(() => new Set()));
+                this.clearHistory();
+            }
+
+            // Count number of solutions (limited to 2 for efficiency)
+            countSolutions(grid, limit = 2) {
+                let count = 0;
+                
+                const solve = () => {
+                    if (count >= limit) return;
+                    
+                    for (let row = 0; row < 9; row++) {
+                        for (let col = 0; col < 9; col++) {
+                            if (grid[row][col] === 0) {
+                                for (let num = 1; num <= 9; num++) {
+                                    if (this.isValidPlacement(grid, row, col, num)) {
+                                        grid[row][col] = num;
+                                        solve();
+                                        grid[row][col] = 0;
+                                    }
+                                }
+                                return;
+                            }
+                        }
+                    }
+                    count++;
+                };
+                
+                solve();
+                return count;
+            }
+
+            shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+
+            // History management for undo/redo
+            saveState() {
+                const state = {
+                    grid: this.grid.map(row => [...row]),
+                    notes: this.notes.map(row => row.map(set => new Set(set)))
+                };
+                
+                // Remove any states after current position
+                this.history = this.history.slice(0, this.historyIndex + 1);
+                this.history.push(state);
+                this.historyIndex++;
+                
+                // Limit history to 50 states
+                if (this.history.length > 50) {
+                    this.history.shift();
+                    this.historyIndex--;
+                }
+            }
+
+            undo() {
+                if (this.historyIndex > 0) {
+                    this.historyIndex--;
+                    const state = this.history[this.historyIndex];
+                    this.grid = state.grid.map(row => [...row]);
+                    this.notes = state.notes.map(row => row.map(set => new Set(set)));
+                    return true;
+                }
+                return false;
+            }
+
+            redo() {
+                if (this.historyIndex < this.history.length - 1) {
+                    this.historyIndex++;
+                    const state = this.history[this.historyIndex];
+                    this.grid = state.grid.map(row => [...row]);
+                    this.notes = state.notes.map(row => row.map(set => new Set(set)));
+                    return true;
+                }
+                return false;
+            }
+
+            clearHistory() {
+                this.history = [{
+                    grid: this.grid.map(row => [...row]),
+                    notes: this.notes.map(row => row.map(set => new Set(set)))
+                }];
+                this.historyIndex = 0;
+            }
+
+            // Get hint - reveal one correct number
+            getHint() {
+                const emptyCells = [];
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (!this.locked[row][col] && this.grid[row][col] === 0) {
+                            emptyCells.push({ row, col });
+                        }
+                    }
+                }
+
+                if (emptyCells.length === 0) return null;
+
+                const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+                return {
+                    row: randomCell.row,
+                    col: randomCell.col,
+                    value: this.solution[randomCell.row][randomCell.col]
+                };
+            }
+
+            // Check if current grid matches solution
+            checkSolution() {
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (this.grid[row][col] !== this.solution[row][col]) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            // Get cells that conflict with given position
+            getConflictingCells(row, col) {
+                const conflicts = new Set();
+                const value = this.grid[row][col];
+                
+                if (value === 0) return conflicts;
+
+                // Check row
+                for (let c = 0; c < 9; c++) {
+                    if (c !== col && this.grid[row][c] === value) {
+                        conflicts.add(`${row}-${c}`);
+                    }
+                }
+
+                // Check column
+                for (let r = 0; r < 9; r++) {
+                    if (r !== row && this.grid[r][col] === value) {
+                        conflicts.add(`${r}-${col}`);
+                    }
+                }
+
+                // Check 3x3 box
+                const boxRow = Math.floor(row / 3) * 3;
+                const boxCol = Math.floor(col / 3) * 3;
+                for (let r = boxRow; r < boxRow + 3; r++) {
+                    for (let c = boxCol; c < boxCol + 3; c++) {
+                        if ((r !== row || c !== col) && this.grid[r][c] === value) {
+                            conflicts.add(`${r}-${c}`);
+                        }
+                    }
+                }
+
+                return conflicts;
+            }
+
+            // Timer controls
+            startTimer() {
+                this.startTime = Date.now() - (this.elapsedSeconds * 1000);
+                this.timerInterval = setInterval(() => {
+                    this.elapsedSeconds = Math.floor((Date.now() - this.startTime) / 1000);
+                    this.updateTimerDisplay();
+                }, 1000);
+            }
+
+            stopTimer() {
+                if (this.timerInterval) {
+                    clearInterval(this.timerInterval);
+                    this.timerInterval = null;
+                }
+            }
+
+            resetTimer() {
+                this.stopTimer();
+                this.elapsedSeconds = 0;
+                this.updateTimerDisplay();
+            }
+
+            updateTimerDisplay() {
+                const minutes = Math.floor(this.elapsedSeconds / 60);
+                const seconds = this.elapsedSeconds % 60;
+                document.getElementById('timer').textContent = 
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+
+            // Save/Load game state
+            saveToLocalStorage() {
+                const gameState = {
+                    grid: this.grid,
+                    solution: this.solution,
+                    locked: this.locked,
+                    notes: this.notes.map(row => row.map(set => Array.from(set))),
+                    difficulty: this.difficulty,
+                    elapsedSeconds: this.elapsedSeconds
+                };
+                localStorage.setItem('sudokuGameState', JSON.stringify(gameState));
+            }
+
+            loadFromLocalStorage() {
+                const saved = localStorage.getItem('sudokuGameState');
+                if (saved) {
+                    const state = JSON.parse(saved);
+                    this.grid = state.grid;
+                    this.solution = state.solution;
+                    this.locked = state.locked;
+                    this.notes = state.notes.map(row => row.map(arr => new Set(arr)));
+                    this.difficulty = state.difficulty;
+                    this.elapsedSeconds = state.elapsedSeconds || 0;
+                    this.clearHistory();
+                    return true;
+                }
+                return false;
+            }
+        }
+
+        // ============================================================================
+        // UI CONTROLLER
+        // ============================================================================
+        class SudokuUI {
+            constructor(game) {
+                this.game = game;
+                this.gridElement = document.getElementById('grid');
+                this.cells = [];
+                this.init();
+            }
+
+            init() {
+                this.createGrid();
+                this.attachEventListeners();
+                this.loadTheme();
+                
+                // Try to load saved game, otherwise start new game
+                if (!this.game.loadFromLocalStorage()) {
+                    this.newGame();
+                } else {
+                    this.render();
+                    document.getElementById('difficultyBadge').textContent = 
+                        this.game.difficulty.toUpperCase();
+                    document.getElementById('difficulty').value = this.game.difficulty;
+                    this.game.startTimer();
+                }
+            }
+
+            createGrid() {
+                this.gridElement.innerHTML = '';
+                this.cells = [];
+
+                for (let row = 0; row < 9; row++) {
+                    this.cells[row] = [];
+                    for (let col = 0; col < 9; col++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        
+                        cell.addEventListener('click', () => this.selectCell(row, col));
+                        
+                        this.gridElement.appendChild(cell);
+                        this.cells[row][col] = cell;
+                    }
+                }
+
+                // Keyboard input
+                document.addEventListener('keydown', (e) => this.handleKeyPress(e));
+            }
+
+            attachEventListeners() {
+                document.getElementById('newGame').addEventListener('click', () => this.newGame());
+                document.getElementById('checkBtn').addEventListener('click', () => this.checkSolution());
+                document.getElementById('hintBtn').addEventListener('click', () => this.showHint());
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearAll());
+                document.getElementById('resetBtn').addEventListener('click', () => this.resetPuzzle());
+                document.getElementById('undoBtn').addEventListener('click', () => this.undo());
+                document.getElementById('redoBtn').addEventListener('click', () => this.redo());
+                document.getElementById('playAgainBtn').addEventListener('click', () => {
+                    document.getElementById('successOverlay').classList.remove('active');
+                    this.newGame();
+                });
+                document.getElementById('themeToggle').addEventListener('click', () => this.toggleTheme());
+
+                // Mode toggle
+                document.querySelectorAll('.mode-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        this.game.mode = btn.dataset.mode;
+                    });
+                });
+
+                // Difficulty change
+                document.getElementById('difficulty').addEventListener('change', (e) => {
+                    this.game.difficulty = e.target.value;
+                });
+            }
+
+            newGame() {
+                this.game.difficulty = document.getElementById('difficulty').value;
+                this.game.createPuzzle(this.game.difficulty);
+                this.game.resetTimer();
+                this.game.startTimer();
+                this.game.selectedCell = null;
+                this.render();
+                document.getElementById('difficultyBadge').textContent = 
+                    this.game.difficulty.toUpperCase();
+                this.game.saveToLocalStorage();
+            }
+
+            selectCell(row, col) {
+                if (this.game.locked[row][col]) return;
+                
+                this.game.selectedCell = { row, col };
+                this.render();
+            }
+
+            handleKeyPress(e) {
+                if (!this.game.selectedCell) return;
+
+                const { row, col } = this.game.selectedCell;
+
+                if (e.key >= '1' && e.key <= '9') {
+                    const num = parseInt(e.key);
+                    if (this.game.mode === 'input') {
+                        this.setCell(row, col, num);
+                    } else {
+                        this.toggleNote(row, col, num);
+                    }
+                } else if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') {
+                    this.setCell(row, col, 0);
+                } else if (e.key === 'ArrowUp' && row > 0) {
+                    this.selectCell(row - 1, col);
+                } else if (e.key === 'ArrowDown' && row < 8) {
+                    this.selectCell(row + 1, col);
+                } else if (e.key === 'ArrowLeft' && col > 0) {
+                    this.selectCell(row, col - 1);
+                } else if (e.key === 'ArrowRight' && col < 8) {
+                    this.selectCell(row, col + 1);
+                }
+            }
+
+            setCell(row, col, value) {
+                if (this.game.locked[row][col]) return;
+
+                this.game.saveState();
+                this.game.grid[row][col] = value;
+                this.game.notes[row][col].clear();
+                this.render();
+                this.game.saveToLocalStorage();
+
+                // Check if puzzle is complete and correct
+                if (this.isPuzzleComplete() && this.game.checkSolution()) {
+                    this.showSuccess();
+                }
+            }
+
+            toggleNote(row, col, num) {
+                if (this.game.locked[row][col] || this.game.grid[row][col] !== 0) return;
+
+                this.game.saveState();
+                const notes = this.game.notes[row][col];
+                if (notes.has(num)) {
+                    notes.delete(num);
+                } else {
+                    notes.add(num);
+                }
+                this.render();
+                this.game.saveToLocalStorage();
+            }
+
+            isPuzzleComplete() {
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (this.game.grid[row][col] === 0) return false;
+                    }
+                }
+                return true;
+            }
+
+            render() {
+                const conflicts = this.game.selectedCell ? 
+                    this.game.getConflictingCells(this.game.selectedCell.row, this.game.selectedCell.col) : 
+                    new Set();
+
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        const cell = this.cells[row][col];
+                        const value = this.game.grid[row][col];
+                        const isLocked = this.game.locked[row][col];
+                        const isSelected = this.game.selectedCell && 
+                            this.game.selectedCell.row === row && 
+                            this.game.selectedCell.col === col;
+                        const isHighlight = this.game.selectedCell && (
+                            this.game.selectedCell.row === row ||
+                            this.game.selectedCell.col === col ||
+                            (Math.floor(this.game.selectedCell.row / 3) === Math.floor(row / 3) &&
+                             Math.floor(this.game.selectedCell.col / 3) === Math.floor(col / 3))
+                        );
+                        const hasConflict = conflicts.has(`${row}-${col}`) || 
+                            (this.game.selectedCell && 
+                             this.game.selectedCell.row === row && 
+                             this.game.selectedCell.col === col && 
+                             conflicts.size > 0);
+
+                        cell.className = 'cell';
+                        if (isLocked) cell.classList.add('locked');
+                        if (isSelected) cell.classList.add('selected');
+                        if (isHighlight && !isSelected) cell.classList.add('highlight');
+                        if (hasConflict && value !== 0) cell.classList.add('error');
+
+                        if (value !== 0) {
+                            cell.textContent = value;
+                        } else if (this.game.notes[row][col].size > 0) {
+                            // Display notes
+                            cell.innerHTML = '<div class="notes">' +
+                                [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => 
+                                    `<span>${this.game.notes[row][col].has(n) ? n : ''}</span>`
+                                ).join('') +
+                                '</div>';
+                        } else {
+                            cell.textContent = '';
+                        }
+                    }
+                }
+            }
+
+            checkSolution() {
+                if (!this.isPuzzleComplete()) {
+                    this.showToast('Puzzle is not complete yet!');
+                    return;
+                }
+
+                if (this.game.checkSolution()) {
+                    this.showSuccess();
+                } else {
+                    this.showToast('Not quite right. Keep trying!');
+                }
+            }
+
+            showHint() {
+                const hint = this.game.getHint();
+                if (!hint) {
+                    this.showToast('No hints available!');
+                    return;
+                }
+
+                this.game.saveState();
+                this.game.grid[hint.row][hint.col] = hint.value;
+                this.game.locked[hint.row][hint.col] = true;
+                this.game.notes[hint.row][hint.col].clear();
+                this.game.selectedCell = { row: hint.row, col: hint.col };
+                this.render();
+                this.game.saveToLocalStorage();
+                this.showToast('Hint revealed!');
+            }
+
+            clearAll() {
+                if (!confirm('Clear all your progress on this puzzle?')) return;
+                
+                this.game.saveState();
+                for (let row = 0; row < 9; row++) {
+                    for (let col = 0; col < 9; col++) {
+                        if (!this.game.locked[row][col]) {
+                            this.game.grid[row][col] = 0;
+                            this.game.notes[row][col].clear();
+                        }
+                    }
+                }
+                this.render();
+                this.game.saveToLocalStorage();
+            }
+
+            resetPuzzle() {
+                if (!confirm('Reset to original puzzle?')) return;
+                
+                this.game.resetTimer();
+                this.game.startTimer();
+                this.clearAll();
+            }
+
+            undo() {
+                if (this.game.undo()) {
+                    this.render();
+                    this.game.saveToLocalStorage();
+                } else {
+                    this.showToast('Nothing to undo');
+                }
+            }
+
+            redo() {
+                if (this.game.redo()) {
+                    this.render();
+                    this.game.saveToLocalStorage();
+                } else {
+                    this.showToast('Nothing to redo');
+                }
+            }
+
+            showSuccess() {
+                this.game.stopTimer();
+                const minutes = Math.floor(this.game.elapsedSeconds / 60);
+                const seconds = this.game.elapsedSeconds % 60;
+                document.getElementById('finalTime').textContent = 
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+                document.getElementById('successOverlay').classList.add('active');
+                this.createConfetti();
+                localStorage.removeItem('sudokuGameState');
+            }
+
+            createConfetti() {
+                const colors = ['#97bc62', '#d4a373', '#2c5f2d', '#fff9e6', '#c84b31'];
+                for (let i = 0; i < 100; i++) {
+                    setTimeout(() => {
+                        const confetti = document.createElement('div');
+                        confetti.className = 'confetti';
+                        confetti.style.left = Math.random() * 100 + 'vw';
+                        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                        confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                        confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                        document.body.appendChild(confetti);
+                        
+                        setTimeout(() => confetti.remove(), 3000);
+                    }, i * 30);
+                }
+            }
+
+            showToast(message) {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.classList.add('active');
+                setTimeout(() => toast.classList.remove('active'), 2000);
+            }
+
+            toggleTheme() {
+                const html = document.documentElement;
+                const currentTheme = html.getAttribute('data-theme');
+                const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+                html.setAttribute('data-theme', newTheme);
+                localStorage.setItem('sudokuTheme', newTheme);
+            }
+
+            loadTheme() {
+                const savedTheme = localStorage.getItem('sudokuTheme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+            }
+        }
+
+        // ============================================================================
+        // INITIALIZE GAME
+        // ============================================================================
+        const game = new SudokuGame();
+        const ui = new SudokuUI(game);
+
+        // Auto-save every 30 seconds
+        setInterval(() => {
+            if (game.timerInterval) {
+                game.saveToLocalStorage();
+            }
+        }, 30000);
+
+        // Save on page unload
+        window.addEventListener('beforeunload', () => {
+            game.saveToLocalStorage();
+        });
+    </script>
+</body>
+</html>
